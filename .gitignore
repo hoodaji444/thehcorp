@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Internal IDE / Agent configs
+.agents/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
