@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hoodaji444.github.io/thehcorp/sitemap.xml
+
