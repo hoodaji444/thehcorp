@@ -125,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       window.addEventListener('wheel', instantDismiss, { passive: true, once: true });
       window.addEventListener('touchmove', instantDismiss, { passive: true, once: true });
+      window.addEventListener('touchstart', instantDismiss, { passive: true, once: true });
       if (skipBtn) skipBtn.addEventListener('click', instantDismiss);
       preloader.addEventListener('click', instantDismiss);
       window.addEventListener('keydown', () => {
@@ -429,10 +430,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (lenis) lenis.stop();
 
     if (hasMotion && !prefersReducedMotion) {
-      const drawerLinks = mobileDrawer.querySelectorAll('.mobile-nav-link, .drawer-contact-item, .drawer-cta-wrap');
+      const drawerLinks = mobileDrawer.querySelectorAll('.mobile-drawer-header, .mobile-nav-link, .drawer-contact-item, .mobile-drawer-footer');
       animate(drawerLinks, 
         { opacity: [0, 1], transform: ['translateX(20px)', 'translateX(0)'] }, 
-        { delay: stagger(0.05, { startDelay: 0.15 }), duration: 0.4, easing: [0.16, 1, 0.3, 1] }
+        { delay: stagger(0.04, { startDelay: 0.1 }), duration: 0.35, easing: [0.16, 1, 0.3, 1] }
       );
     }
   };
@@ -455,6 +456,11 @@ document.addEventListener('DOMContentLoaded', () => {
         openDrawer();
       }
     });
+
+    const drawerCloseBtn = document.getElementById('mobileDrawerClose');
+    if (drawerCloseBtn) {
+      drawerCloseBtn.addEventListener('click', closeDrawer);
+    }
 
     drawerBackdrop.addEventListener('click', closeDrawer);
 
