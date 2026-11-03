@@ -2668,6 +2668,19 @@ button, input, textarea, select {
     display: block;
   }
 
+  .hero-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .hero-visual-card {
+    order: -1;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
   .hero-pillars-strip {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -2826,21 +2839,31 @@ button, input, textarea, select {
     line-height: 1.35;
   }
 
-  /* Hero Floating Emblem Showcase Card */
+  .hero-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Hero Floating Emblem Showcase Card - Prominently Displayed on First Screen */
   .hero-visual-card {
+    order: -1;
+    width: 100%;
     max-width: 100%;
-    margin-top: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 0.25rem;
   }
 
   .visual-emblem-container {
-    padding: 0.5rem 0;
+    padding: 0;
   }
 
   .emblem-image-holder {
-    width: min(88vw, 290px);
+    width: min(54vw, 190px);
     max-width: 100%;
-    margin-bottom: 0.5rem;
+    margin: 0 auto;
     animation: harmonic-levitation 6s ease-in-out infinite;
+    filter: drop-shadow(0 0 28px rgba(223, 183, 108, 0.52)) drop-shadow(0 0 65px rgba(197, 155, 76, 0.25));
   }
 
   .emblem-brand-name {
