@@ -14,14 +14,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const hasMotion = !!(animate && scroll && inView && stagger);
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // --- Mobile & Touch Device Detection ---
+  const isTouchOrMobile = (
+    'ontouchstart' in window ||
+    navigator.maxTouchPoints > 0 ||
+    window.matchMedia('(pointer: coarse)').matches ||
+    window.innerWidth <= 860
+  );
+
   // Activate 3D Magazine Animation System if supported
   if (hasMotion && !prefersReducedMotion) {
     document.documentElement.classList.add('js-animate');
   }
 
-  // --- Initialize Lenis Smooth Inertia Scroll Engine ---
+  // --- Initialize Lenis Smooth Inertia Scroll Engine (Desktop Only) ---
+  // Mobile touch devices natively provide 60/120Hz hardware momentum physics;
+  // Lenis is strictly activated for desktop mouse-wheel interpolation.
   let lenis = null;
-  if (typeof window.Lenis !== 'undefined' && !prefersReducedMotion) {
+  if (typeof window.Lenis !== 'undefined' && !prefersReducedMotion && !isTouchOrMobile) {
     lenis = new window.Lenis({
       duration: 1.25, // Silky luxury inertia glide
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential deceleration
@@ -29,14 +39,16 @@ document.addEventListener('DOMContentLoaded', () => {
       gestureOrientation: 'vertical',
       smoothWheel: true,
       wheelMultiplier: 1.05,
-      touchMultiplier: 1.2,
+      touchMultiplier: 1.0,
       smoothTouch: false,
       infinite: false,
     });
 
     function lenisRaf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(lenisRaf);
+      if (lenis) {
+        lenis.raf(time);
+        requestAnimationFrame(lenisRaf);
+      }
     }
     requestAnimationFrame(lenisRaf);
 
@@ -54,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dismissPreloader = (immediate = false) => {
     if (preloaderDismissed || !preloader) return;
     preloaderDismissed = true;
+    window.__preloaderDismissed = true;
 
     // Immediately free up pointer events and remove loading state so scrolling is instant
     preloader.style.pointerEvents = 'none';
@@ -63,14 +76,18 @@ document.addEventListener('DOMContentLoaded', () => {
       progressBar.style.width = '100%';
     }
 
-    const fadeDuration = immediate ? 0.3 : 0.55;
+    const fadeDuration = immediate ? 0.25 : (isTouchOrMobile ? 0.35 : 0.55);
 
     const handleDismissComplete = () => {
-      preloader.style.display = 'none';
-      triggerHeroMotion();
-      if (typeof checkVisibleCards === 'function') checkVisibleCards();
-      cacheSectionPositions();
-      if (lenis) lenis.resize();
+      try {
+        preloader.style.display = 'none';
+        triggerHeroMotion();
+        if (typeof checkVisibleCards === 'function') checkVisibleCards();
+        cacheSectionPositions();
+        if (lenis) lenis.resize();
+      } catch (err) {
+        console.warn('Preloader cleanup completed with fallback:', err);
+      }
     };
 
     if (hasMotion && !prefersReducedMotion) {
@@ -84,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(handleDismissComplete, fadeDuration * 1000);
     } else {
       preloader.classList.add('is-hidden');
-      setTimeout(handleDismissComplete, 300);
+      setTimeout(handleDismissComplete, 250);
     }
   };
 
@@ -96,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (skipPreloader) {
       preloader.style.display = 'none';
       document.body.classList.remove('is-loading');
+      window.__preloaderDismissed = true;
       triggerHeroMotion();
     } else if (prefersReducedMotion && !isPreview) {
       dismissPreloader(true);
@@ -105,18 +123,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hasMotion && !isPreview) {
           animate(progressBar, 
             { width: ['0%', '45%', '85%', '100%'] }, 
-            { duration: 1.0, times: [0, 0.2, 0.65, 1], easing: [0.16, 1, 0.3, 1] }
+            { duration: isTouchOrMobile ? 0.6 : 1.0, times: [0, 0.2, 0.65, 1], easing: [0.16, 1, 0.3, 1] }
           );
         } else {
-          setTimeout(() => { if (!preloaderDismissed) progressBar.style.width = '45%'; }, 100);
-          setTimeout(() => { if (!preloaderDismissed) progressBar.style.width = '85%'; }, 450);
-          setTimeout(() => { if (!preloaderDismissed) progressBar.style.width = '100%'; }, 900);
+          setTimeout(() => { if (!preloaderDismissed) progressBar.style.width = '45%'; }, 80);
+          setTimeout(() => { if (!preloaderDismissed) progressBar.style.width = '85%'; }, 300);
+          setTimeout(() => { if (!preloaderDismissed) progressBar.style.width = '100%'; }, 550);
         }
       }
 
-      // Elegant display timer: 1050ms (brief, impactful golden logo impression, then seamless dissolve)
-      const duration = isPreview ? 8000 : 1050;
+      // Elegant display timer: 650ms on mobile for swift snappy entrance, 1050ms on desktop
+      const duration = isPreview ? 8000 : (isTouchOrMobile ? 650 : 1050);
       setTimeout(() => dismissPreloader(false), duration);
+
+      // Hard safety timer: guarantee dismissal even under severe mobile network throttling
+      setTimeout(() => {
+        if (!preloaderDismissed) dismissPreloader(true);
+      }, 1600);
 
       // Instant interactive skip on ANY interaction (wheel, touch scroll, click, key)
       const instantDismiss = () => {
@@ -161,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Cache Section Dimensions to eliminate Layout Thrashing (zero getBoundingClientRect per scroll frame)
   let cachedSections = [];
-  const cacheSectionPositions = () => {
+  function cacheSectionPositions() {
     cachedSections = Array.from(sections).map(sec => {
       const top = sec.offsetTop;
       return {
@@ -170,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bottom: top + sec.offsetHeight
       };
     });
-  };
+  }
   cacheSectionPositions();
   window.addEventListener('resize', cacheSectionPositions);
 
@@ -399,12 +422,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6.4 General fallback for remaining standalone .reveal-fade-up elements (excluding 3D magazine cards)
     document.querySelectorAll('.reveal-fade-up:not(.service-card):not(.process-step-card):not(.why-card):not(.case-study-card):not(.testimonial-card):not(.faq-item)').forEach(el => {
       inView(el, () => {
+        el.classList.add('is-visible');
         animate(el, 
           { opacity: [0, 1], transform: ['translateY(20px)', 'translateY(0)'] }, 
           { duration: 0.6, easing: [0.16, 1, 0.3, 1] }
         );
       }, { margin: '-40px 0px -40px 0px' });
     });
+
+    // Mobile / Touch: Immediately unfold all cards and reveal elements for zero latency
+    if (isTouchOrMobile) {
+      document.querySelectorAll('.reveal-fade-up').forEach(el => el.classList.add('is-visible'));
+      document.querySelectorAll(
+        '.service-card, .process-step-card, .why-card, .case-study-card, .testimonial-card, .faq-item, .magazine-gatefold-left, .magazine-gatefold-right'
+      ).forEach(el => el.classList.add('is-unfolded'));
+    }
 
   } else {
     // Fallback if motion is absent or user prefers reduced motion

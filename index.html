@@ -1848,6 +1848,16 @@
   <script src="assets/vendor/lenis/lenis.min.js"></script>
   <script src="assets/vendor/motion/motion.js"></script>
   <script src="assets/js/script.js"></script>
+  <script>
+    // Fail-safe watchdog: Guarantee preloader auto-dismissal under all network conditions
+    setTimeout(function() {
+      var p = document.getElementById('brandPreloader');
+      if (p && !window.__preloaderDismissed) {
+        p.style.display = 'none';
+        document.body.classList.remove('is-loading');
+      }
+    }, 1800);
+  </script>
 </body>
 
 </html>

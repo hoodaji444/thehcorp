@@ -84,6 +84,7 @@ html.lenis,
 html.lenis body {
   height: auto;
   scroll-behavior: auto !important;
+  overscroll-behavior-y: none;
 }
 
 .lenis.lenis-smooth {
@@ -111,8 +112,13 @@ body {
   max-width: 100vw;
   position: relative;
   min-height: 100vh;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Optimize touch interactions across all mobile controls */
+button, a, input, select, textarea {
+  touch-action: manipulation;
 }
 
 /* Accessible focus ring */
@@ -774,14 +780,18 @@ button, input, textarea, select {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: right 0.4s var(--transition-smooth);
+  transition: right 0.35s var(--transition-smooth), visibility 0.35s ease;
   box-shadow: -15px 0 45px rgba(0, 0, 0, 0.85);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .mobile-drawer.is-open {
   right: 0;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .mobile-drawer-header {
@@ -2697,6 +2707,28 @@ button, input, textarea, select {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Unlocked Mobile Scrolling & Instant Content Legibility */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    overscroll-behavior-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Guarantee all cards and content are immediately visible and unlocked on mobile devices */
+  .js-animate .reveal-fade-up:not(.is-visible),
+  .js-animate .service-card,
+  .js-animate .process-step-card,
+  .js-animate .why-card,
+  .js-animate .case-study-card,
+  .js-animate .testimonial-card,
+  .js-animate .faq-item,
+  .js-animate .magazine-gatefold-left,
+  .js-animate .magazine-gatefold-right {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
